@@ -1,0 +1,34 @@
+setwd("C:/Users/litianqi/Desktop/")
+library(broom)
+library(tidyverse)
+library(readxl)
+library(stringr)
+d<-read_excel("C:/Users/litianqi/Desktop/Ageing Epi pH ChineseOnly Ver 2023-06-16.xlsx")
+
+d[d == "NA"] <- NA
+d$Ag_BMI_JY_Merged <- as.numeric(d$Ag_BMI_JY_Merged)
+d$Ag_Age_JY_Merged <- as.numeric(d$Ag_Age_JY_Merged)
+
+### This is the phenotype that I am currently working on ###
+d$current.phenotype <- d$Ag_SkinAgeingPC1_Disease_vs_NoDisease_JY #####Change this name from Ag_SkinAgeingPC1_Disease_vs_NoDisease_JY to the phenotype that you want to study.
+d$current.phenotype <- as.factor(d$current.phenotype)
+d$current.phenotype <-relevel(d$current.phenotype,ref="Control") #rearrange the factors
+summary(d$current.phenotype)
+
+### This is the exposure that I am currently working on ###
+d$current.exposure <- d$Ag_Age_Group_JY_Merged ############Change this name from Epi_Meat to the exposure that I want to study.
+d$current.exposure<-as.factor(d$current.exposure) #convert the variable to a factor
+d$current.exposure<-relevel(d$current.exposure,ref="1") #rearrange the factors
+summary(d$current.exposure)
+
+#Univariate analysis
+m <- glm(current.phenotype~current.exposure, data=d, family=binomial(link='logit'))
+summary(m)
+exp(m$coefficients)
+exp(confint(m))
+
+#Multivariate analysis #Remove Ag_Age_JY.merged or Ag_Gender_JY.merged when analysing age or gender as a risk factor, respectively.
+m <- glm(current.phenotype~current.exposure + Ag_Age_JY.merged + Ag_Gender_JY_Merged + Ag_BMI_JY_Merged + Ag_Ever_Alcohol_JY + Ag_Ever_Smoked_JY, data=d, family=binomial(link='logit'))
+summary(m)
+exp(m$coefficients)
+exp(confint(m))
